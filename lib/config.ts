@@ -1,7 +1,30 @@
-const Mustache = require('mustache');
+import * as Mustache from 'mustache';
+import { Context } from 'mustache';
 
-function validateCommentConfig(configObject, templateVariables) {
-  const configMap = new Map();
+type ConfigObject = {
+  comment: {
+    header?: string | null;
+    'on-create'?: string | null;
+    'on-update'?: string | null;
+    'glob-options'?: object;
+    footer?: string | null;
+    snippets?: SnippetObject[];
+  }
+};
+
+type SnippetObject = {
+  id: string;
+  body: string;
+  files: (string | FileMatcher)[];
+};
+
+type FileMatcher = {
+  any?: string[];
+  all?: string[];
+};
+
+function validateCommentConfig(configObject: ConfigObject, templateVariables: Context): Map<string, unknown> {
+  const configMap = new Map<string, unknown>();
 
   if (typeof configObject.comment !== 'object') {
     throw Error(
@@ -9,7 +32,7 @@ function validateCommentConfig(configObject, templateVariables) {
     );
   }
 
-  if (configObject.comment.header === undefined || configObject.comment.header === null || typeof configObject.comment.header === 'string') {
+  if (configObject.comment.header === undefined || configObject.comment.header === null) {
     configMap.set('header', configObject.comment.header);
   } else {
     throw Error(
@@ -23,7 +46,7 @@ function validateCommentConfig(configObject, templateVariables) {
   } else if (typeof configObject.comment['on-create'] === 'string') {
     const onCreate = Mustache.render(configObject.comment['on-create'], templateVariables);
 
-    if (allowedOnCreateValues.includes(onCreate)) {
+    if (allowedOnCreateValues.includes(onCreate as typeof allowedOnCreateValues[number])) {
       configMap.set('onCreate', onCreate);
     } else {
       throw Error(
@@ -36,13 +59,13 @@ function validateCommentConfig(configObject, templateVariables) {
     );
   }
 
-  const allowedOnUpdateValues = ['recreate', 'edit', 'nothing'];
+  const allowedOnUpdateValues = ['recreate', 'edit', 'nothing'] as const;
   if (configObject.comment['on-update'] === undefined || configObject.comment['on-update'] === null) {
     configMap.set('onUpdate', allowedOnUpdateValues[0]);
   } else if (typeof configObject.comment['on-update'] === 'string') {
     const onUpdate = Mustache.render(configObject.comment['on-update'], templateVariables);
 
-    if (allowedOnUpdateValues.includes(onUpdate)) {
+    if (allowedOnUpdateValues.includes(onUpdate as typeof allowedOnUpdateValues[number])) {
       configMap.set('onUpdate', onUpdate);
     } else {
       throw Error(
@@ -69,44 +92,33 @@ function validateCommentConfig(configObject, templateVariables) {
 
   if (Array.isArray(configObject.comment.snippets) && configObject.comment.snippets.length > 0) {
     configMap.set('snippets', configObject.comment.snippets.map((snippetObject, index) => {
-      const snippetMap = new Map();
+      const snippetMap = new Map<string, unknown>();
 
-      if (typeof snippetObject.id === 'string') {
-        const id = Mustache.render(snippetObject.id, templateVariables);
-        const regex = /^[A-Za-z0-9\-_,]*$/;
-        if (regex.exec(id)) {
-          snippetMap.set('id', id);
-        } else {
-          throw Error(
-            `found invalid snippet id '${id}' (snippet ids must contain only letters, numbers, dashes, and underscores)`,
-          );
-        }
+      const id = Mustache.render(snippetObject.id, templateVariables);
+      const regex = /^[A-Za-z0-9\-_,]*$/;
+      if (regex.exec(id)) {
+        snippetMap.set('id', id);
       } else {
         throw Error(
-          `found unexpected value type '${typeof snippetObject.id}' under key '.comment.snippets.${index}.id' (should be a string)`,
+          `found invalid snippet id '${id}' (snippet ids must contain only letters, numbers, dashes, and underscores)`,
         );
       }
 
-      if (typeof snippetObject.body === 'string') {
-        snippetMap.set('body', snippetObject.body);
-      } else {
-        throw Error(
-          `found unexpected value type '${typeof snippetObject.body}' under key '.comment.snippets.${index}.body' (should be a string)`,
-        );
-      }
+      snippetMap.set('body', snippetObject.body);
 
-      const isValidMatcher = (matcher) => {
-        const isAnyValid = !matcher.any
-          || (Array.isArray(matcher.any) && matcher.any.length > 0 && matcher.any.every((f) => typeof f === 'string'));
+      const isValidMatcher = (matcher: string | FileMatcher): boolean => {
+        if (typeof matcher === 'string') return true;
+        if (typeof matcher !== 'object' || matcher === null) return false;
 
-        const isAllValid = !matcher.all
-          || (Array.isArray(matcher.all) && matcher.all.length > 0 && matcher.all.every((f) => typeof f === 'string'));
+        const isAnyValid = !matcher.any || (Array.isArray(matcher.any) && matcher.any.length > 0);
+
+        const isAllValid = !matcher.all || (Array.isArray(matcher.all) && matcher.all.length > 0);
 
         const isAtLeastOnePresent = (!!matcher.any || !!matcher.all);
 
-        return typeof matcher === 'string' || (matcher && isAnyValid && isAllValid && isAtLeastOnePresent);
+        return isAnyValid && isAllValid && isAtLeastOnePresent;
       };
-      const isValidFileList = (list) => Array.isArray(list) && list.length > 0;
+      const isValidFileList = (list: (string | FileMatcher)[]): boolean => Array.isArray(list) && list.length > 0;
 
       if (isValidFileList(snippetObject.files)) {
         const list = snippetObject.files.map((matcher, matcherIndex) => {
@@ -114,14 +126,19 @@ function validateCommentConfig(configObject, templateVariables) {
             if (typeof matcher === 'string') {
               return matcher;
             }
-            const obj = {};
-            if (matcher.any) { obj.any = matcher.any; }
-            if (matcher.all) { obj.all = matcher.all; }
+            const obj: FileMatcher = {};
+            if (matcher.any) {
+              obj.any = matcher.any;
+            }
+            if (matcher.all) {
+              obj.all = matcher.all;
+            }
             return obj;
+          } else {
+            throw Error(
+                `found unexpected value type under key '.comment.snippets.${index}.files.${matcherIndex}' (should be a string or an object with keys 'all' and/or 'any')`,
+            );
           }
-          throw Error(
-            `found unexpected value type under key '.comment.snippets.${index}.files.${matcherIndex}' (should be a string or an object with keys 'all' and/or 'any')`,
-          );
         });
         snippetMap.set('files', list);
       } else {
@@ -133,8 +150,8 @@ function validateCommentConfig(configObject, templateVariables) {
       return snippetMap;
     }));
 
-    const snippetIds = configMap.get('snippets').map((s) => s.get('id'));
-    snippetIds.forEach((value, index, self) => {
+    const snippetIds = (configMap.get('snippets') as Map<string, unknown>[]).map((s: Map<string, unknown>) => s.get('id') as string);
+    snippetIds.forEach((value: string, index: number, self: string[]) => {
       if (self.indexOf(value) !== index) {
         throw Error(
           `found duplicate snippet id '${value}'`,
@@ -150,4 +167,4 @@ function validateCommentConfig(configObject, templateVariables) {
   return configMap;
 }
 
-module.exports = { validateCommentConfig };
+export { validateCommentConfig };
