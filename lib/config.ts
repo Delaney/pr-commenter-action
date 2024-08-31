@@ -1,50 +1,29 @@
 import * as Mustache from 'mustache';
-import { Context } from 'mustache';
+import { CommentObject, ConfigObject, MatchConfig } from '../types/global.type';
 
-type ConfigObject = {
-  comment: {
-    header?: string | null;
-    'on-create'?: string | null;
-    'on-update'?: string | null;
-    'glob-options'?: object;
-    footer?: string | null;
-    snippets?: SnippetObject[];
-  }
-};
-
-type SnippetObject = {
-  id: string;
-  body: string;
-  files: (string | FileMatcher)[];
-};
-
-type FileMatcher = {
-  any?: string[];
-  all?: string[];
-};
-
-function validateCommentConfig(configObject: ConfigObject, templateVariables: Context): Map<string, unknown> {
+function validateCommentConfig(configObject: ConfigObject, templateVariables: Record<string, string>): Map<string, unknown> {
   const configMap = new Map<string, unknown>();
+  const comment: CommentObject = configObject.comment;
 
-  if (typeof configObject.comment !== 'object') {
+  if (typeof comment !== 'object') {
     throw Error(
-      `found unexpected value type '${typeof configObject.comment}' under key '.comment' (should be an object)`,
+      `found unexpected value type '${typeof comment}' under key '.comment' (should be an object)`,
     );
   }
 
-  if (configObject.comment.header === undefined || configObject.comment.header === null) {
-    configMap.set('header', configObject.comment.header);
+  if (comment.header === undefined || comment.header === null) {
+    configMap.set('header', comment.header);
   } else {
     throw Error(
-      `found unexpected value type '${typeof configObject.comment.header}' under key '.comment.header' (should be a string)`,
+      `found unexpected value type '${typeof comment.header}' under key '.comment.header' (should be a string)`,
     );
   }
 
   const allowedOnCreateValues = ['create', 'nothing'];
-  if (configObject.comment['on-create'] === undefined || configObject.comment['on-create'] === null) {
+  if (comment['on-create'] === undefined || comment['on-create'] === null) {
     configMap.set('onCreate', allowedOnCreateValues[0]);
-  } else if (typeof configObject.comment['on-create'] === 'string') {
-    const onCreate = Mustache.render(configObject.comment['on-create'], templateVariables);
+  } else if (typeof comment['on-create'] === 'string') {
+    const onCreate = Mustache.render(comment['on-create'], templateVariables);
 
     if (allowedOnCreateValues.includes(onCreate as typeof allowedOnCreateValues[number])) {
       configMap.set('onCreate', onCreate);
@@ -55,15 +34,15 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Co
     }
   } else {
     throw Error(
-      `found unexpected value type '${typeof configObject.comment['on-create']}' under key '.comment.on-create' (should be a string)`,
+      `found unexpected value type '${typeof comment['on-create']}' under key '.comment.on-create' (should be a string)`,
     );
   }
 
   const allowedOnUpdateValues = ['recreate', 'edit', 'nothing'] as const;
-  if (configObject.comment['on-update'] === undefined || configObject.comment['on-update'] === null) {
+  if (comment['on-update'] === undefined || comment['on-update'] === null) {
     configMap.set('onUpdate', allowedOnUpdateValues[0]);
-  } else if (typeof configObject.comment['on-update'] === 'string') {
-    const onUpdate = Mustache.render(configObject.comment['on-update'], templateVariables);
+  } else if (typeof comment['on-update'] === 'string') {
+    const onUpdate = Mustache.render(comment['on-update'], templateVariables);
 
     if (allowedOnUpdateValues.includes(onUpdate as typeof allowedOnUpdateValues[number])) {
       configMap.set('onUpdate', onUpdate);
@@ -74,24 +53,24 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Co
     }
   } else {
     throw Error(
-      `found unexpected value type '${typeof configObject.comment['on-update']}' under key '.comment.on-update' (should be a string)`,
+      `found unexpected value type '${typeof comment['on-update']}' under key '.comment.on-update' (should be a string)`,
     );
   }
 
-  if (configObject.comment['glob-options'] && typeof configObject.comment['glob-options'] === 'object') {
-    configMap.set('globOptions', configObject.comment['glob-options']);
+  if (comment['glob-options'] && typeof comment['glob-options'] === 'object') {
+    configMap.set('globOptions', comment['glob-options']);
   }
 
-  if (configObject.comment.footer === undefined || configObject.comment.footer === null || typeof configObject.comment.footer === 'string') {
-    configMap.set('footer', configObject.comment.footer);
+  if (comment.footer === undefined || comment.footer === null || typeof comment.footer === 'string') {
+    configMap.set('footer', comment.footer);
   } else {
     throw Error(
-      `found unexpected value type '${typeof configObject.comment.footer}' under key '.comment.footer' (should be a string)`,
+      `found unexpected value type '${typeof comment.footer}' under key '.comment.footer' (should be a string)`,
     );
   }
 
-  if (Array.isArray(configObject.comment.snippets) && configObject.comment.snippets.length > 0) {
-    configMap.set('snippets', configObject.comment.snippets.map((snippetObject, index) => {
+  if (Array.isArray(comment.snippets) && comment.snippets.length > 0) {
+    configMap.set('snippets', comment.snippets.map((snippetObject, index) => {
       const snippetMap = new Map<string, unknown>();
 
       const id = Mustache.render(snippetObject.id, templateVariables);
@@ -106,7 +85,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Co
 
       snippetMap.set('body', snippetObject.body);
 
-      const isValidMatcher = (matcher: string | FileMatcher): boolean => {
+      const isValidMatcher = (matcher: string | MatchConfig): boolean => {
         if (typeof matcher === 'string') return true;
         if (typeof matcher !== 'object' || matcher === null) return false;
 
@@ -118,7 +97,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Co
 
         return isAnyValid && isAllValid && isAtLeastOnePresent;
       };
-      const isValidFileList = (list: (string | FileMatcher)[]): boolean => Array.isArray(list) && list.length > 0;
+      const isValidFileList = (list: (string | MatchConfig)[]): boolean => Array.isArray(list) && list.length > 0;
 
       if (isValidFileList(snippetObject.files)) {
         const list = snippetObject.files.map((matcher, matcherIndex) => {
@@ -126,7 +105,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Co
             if (typeof matcher === 'string') {
               return matcher;
             }
-            const obj: FileMatcher = {};
+            const obj: MatchConfig = {};
             if (matcher.any) {
               obj.any = matcher.any;
             }
