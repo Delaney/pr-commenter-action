@@ -96,11 +96,7 @@ function isConfigObject(obj: unknown): obj is ConfigObject {
 
   const comment = config.comment as Record<string, unknown>;
 
-  if (!Array.isArray(comment.snippets) || comment.snippets.length === 0) {
-    return false;
-  }
-
-  return true;
+  return !(!Array.isArray(comment.snippets) || comment.snippets.length === 0);
 }
 
 async function getCommentConfig(client: ReturnType<typeof github.getOctokit>, configurationPath: string, templateVariables: Record<string, string>): Promise<CommentConfig> {
