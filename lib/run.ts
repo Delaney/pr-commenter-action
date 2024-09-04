@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as yaml from 'js-yaml';
-import { Comment, CommentConfig, ConfigObject } from '../types/global.type';
+import {Comment, CommentConfig, ConfigObject, TemplateVariables} from '../types/global.type';
 import { validateCommentConfig } from './config';
 import { getMatchingSnippetIds } from './snippets';
 import {
@@ -22,55 +22,62 @@ import {
 } from './github';
 
 async function run(): Promise<void> {
-  const token = core.getInput('github-token', { required: true });
-  const configPath = core.getInput('config-file', { required: true });
-  const templateVariablesJSONString = core.getInput('template-variables', { required: false });
+  try {
+    const token = core.getInput('github-token', {required: true});
+    const configPath = core.getInput('config-file', {required: true});
+    const templateVariablesJSONString = core.getInput('template-variables', {required: false});
 
-  const prNumber = getPrNumber();
-  if (prNumber === undefined) {
-    console.log('Could not get pull request number from context, exiting');
-    return;
-  }
-
-  // eslint-disable-next-line new-cap
-  const client = github.getOctokit(token);
-
-  core.debug(`fetching changed files for pr #${prNumber}`);
-  const changedFiles = await getChangedFiles(client, prNumber);
-  const previousComment = await getPreviousPRComment(client, prNumber);
-
-  let templateVariables: Record<string, string> = {};
-  if (templateVariablesJSONString) {
-    core.debug('Input template-variables was passed');
-    core.debug(templateVariablesJSONString);
-
-    try {
-      templateVariables = JSON.parse(templateVariablesJSONString);
-    } catch (error) {
-      core.warning('Failed to parse template-variables input as JSON. Continuing without template variables.');
+    const prNumber = getPrNumber();
+    if (prNumber === undefined) {
+      console.log('Could not get pull request number from context, exiting');
+      return;
     }
-  } else {
-    core.debug('Input template-variables was not passed');
-  }
 
-  const commentConfig = (await getCommentConfig(client, configPath, templateVariables)) as CommentConfig;
-  const snippetIds = getMatchingSnippetIds(changedFiles, commentConfig);
+    // eslint-disable-next-line new-cap
+    const client = github.getOctokit(token);
 
-  if (previousComment && shouldDeletePreviousComment(previousComment, snippetIds, commentConfig)) {
-    core.info('removing previous comment');
-    await deleteComment(client, previousComment);
-  }
+    core.debug(`fetching changed files for pr #${prNumber}`);
+    const changedFiles = await getChangedFiles(client, prNumber);
+    const previousComment = await getPreviousPRComment(client, prNumber);
 
-  const commentBody = assembleCommentBody(snippetIds, commentConfig, templateVariables);
+    let templateVariables: TemplateVariables = {};
+    if (templateVariablesJSONString) {
+      core.debug('Input template-variables was passed');
+      core.debug(templateVariablesJSONString);
 
-  if (previousComment && shouldEditPreviousComment(previousComment, snippetIds, commentConfig)) {
-    core.info('updating previous comment');
-    await editComment(client, previousComment, commentBody);
-  }
+      try {
+        templateVariables = JSON.parse(templateVariablesJSONString);
+      } catch (error) {
+        core.warning('Failed to parse template-variables input as JSON. Continuing without template variables.');
+      }
+    } else {
+      core.debug('Input template-variables was not passed');
+    }
 
-  if (shouldPostNewComment(previousComment, snippetIds, commentConfig)) {
-    core.info('creating a new comment');
-    await createComment(client, prNumber, commentBody);
+    const commentConfig = (await getCommentConfig(client, configPath, templateVariables));
+    const snippetIds = getMatchingSnippetIds(changedFiles, commentConfig);
+
+    if (previousComment && shouldDeletePreviousComment(previousComment, snippetIds, commentConfig)) {
+      core.info('removing previous comment');
+      await deleteComment(client, previousComment);
+    }
+
+    const commentBody = assembleCommentBody(snippetIds, commentConfig, templateVariables);
+
+    if (previousComment && shouldEditPreviousComment(previousComment, snippetIds, commentConfig)) {
+      core.info('updating previous comment');
+      await editComment(client, previousComment, commentBody);
+    }
+
+    if (shouldPostNewComment(previousComment, snippetIds, commentConfig)) {
+      core.info('creating a new comment');
+      await createComment(client, prNumber, commentBody);
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.error(error);
+      core.setFailed((error as Error).message);
+    }
   }
 }
 
@@ -99,7 +106,7 @@ function isConfigObject(obj: unknown): obj is ConfigObject {
   return !(!Array.isArray(comment.snippets) || comment.snippets.length === 0);
 }
 
-async function getCommentConfig(client: ReturnType<typeof github.getOctokit>, configurationPath: string, templateVariables: Record<string, string>): Promise<CommentConfig> {
+async function getCommentConfig(client: ReturnType<typeof github.getOctokit>, configurationPath: string, templateVariables: TemplateVariables): Promise<CommentConfig> {
   const configurationContent = await getFileContent(client, configurationPath);
   const configObject = yaml.load(configurationContent);
 
@@ -126,11 +133,9 @@ async function getPreviousPRComment(client: ReturnType<typeof github.getOctokit>
       core.info(`found previous comment made by pr-commenter: ${previousComment.url}`);
       core.info(`extracted snippet ids from previous comment: ${previousSnippetIds.join(', ')}`);
     }
-
-    await previousComment;
   }
 
-  return null;
+  return previousComment ?? null;
 }
 
 export { run };
