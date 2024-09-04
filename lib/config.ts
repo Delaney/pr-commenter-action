@@ -1,7 +1,7 @@
 import * as Mustache from 'mustache';
 import { CommentObject, ConfigObject, MatchConfig } from '../types/global.type';
 
-function validateCommentConfig(configObject: ConfigObject, templateVariables: Record<string, string>): Map<string, unknown> {
+function validateCommentConfig(configObject: ConfigObject, templateVariables?: Record<string|number, string|number>): Map<string, unknown> {
   const configMap = new Map<string, unknown>();
   const comment: CommentObject = configObject.comment;
 
@@ -11,7 +11,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Re
     );
   }
 
-  if (comment.header === undefined || comment.header === null) {
+  if (comment.header === undefined || comment.header === null || typeof comment.header === 'string') {
     configMap.set('header', comment.header);
   } else {
     throw Error(
@@ -73,29 +73,42 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables: Re
     configMap.set('snippets', comment.snippets.map((snippetObject, index) => {
       const snippetMap = new Map<string, unknown>();
 
-      const id = Mustache.render(snippetObject.id, templateVariables);
-      const regex = /^[A-Za-z0-9\-_,]*$/;
-      if (regex.exec(id)) {
-        snippetMap.set('id', id);
+      if (typeof snippetObject.id === 'string') {
+        const id = Mustache.render(snippetObject.id, templateVariables);
+        const regex = /^[A-Za-z0-9\-_,]*$/;
+        if (regex.exec(id)) {
+          snippetMap.set('id', id);
+        } else {
+          throw Error(
+            `found invalid snippet id '${id}' (snippet ids must contain only letters, numbers, dashes, and underscores)`,
+          );
+        }
       } else {
         throw Error(
-          `found invalid snippet id '${id}' (snippet ids must contain only letters, numbers, dashes, and underscores)`,
+          `found unexpected value type '${typeof snippetObject.id}' under key '.comment.snippets.${index}.id' (should be a string)`
         );
       }
 
-      snippetMap.set('body', snippetObject.body);
+      if (typeof snippetObject.body === 'string') {
+        snippetMap.set('body', snippetObject.body);
+      } else {
+        throw Error(
+            `found unexpected value type '${typeof snippetObject.body}' under key '.comment.snippets.${index}.body' (should be a string)`,
+        );
+      }
 
       const isValidMatcher = (matcher: string | MatchConfig): boolean => {
-        if (typeof matcher === 'string') return true;
-        if (typeof matcher !== 'object' || matcher === null) return false;
+        if (typeof matcher !== "string") {
+          const isAnyValid = !(matcher.any) || (Array.isArray(matcher.any) && matcher.any.length > 0 && matcher.any.every((f) => typeof f === 'string'));
 
-        const isAnyValid = !matcher.any || (Array.isArray(matcher.any) && matcher.any.length > 0);
+          const isAllValid = !(matcher.all) || (Array.isArray(matcher.all) && matcher.all.length > 0 && matcher.all.every((f) => typeof f === 'string'));
 
-        const isAllValid = !matcher.all || (Array.isArray(matcher.all) && matcher.all.length > 0);
+          const isAtLeastOnePresent = ((Boolean(matcher.any)) || (Boolean(matcher.all)));
 
-        const isAtLeastOnePresent = (!!matcher.any || !!matcher.all);
+          return isAnyValid && isAllValid && isAtLeastOnePresent;
+        }
 
-        return isAnyValid && isAllValid && isAtLeastOnePresent;
+        return true;
       };
       const isValidFileList = (list: (string | MatchConfig)[]): boolean => Array.isArray(list) && list.length > 0;
 

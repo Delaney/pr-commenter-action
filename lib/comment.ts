@@ -40,7 +40,7 @@ function assembleCommentBody(
 }
 
 function newCommentDifferentThanPreviousComment(previousComment: Comment, snippetIds: string[]): boolean {
-  const previousSnippetIds = extractCommentMetadata(previousComment.body);
+  const previousSnippetIds = (previousComment.body != null) ? extractCommentMetadata(previousComment.body) : null;
 
   return previousSnippetIds !== null && previousSnippetIds.join(',') !== snippetIds.join(',');
 }
@@ -87,6 +87,7 @@ function shouldEditPreviousComment(
 }
 
 export {
+  commentMetadata,
   assembleCommentBody,
   extractCommentMetadata,
   shouldPostNewComment,
