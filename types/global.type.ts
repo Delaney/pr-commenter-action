@@ -42,3 +42,7 @@ export interface Snippet extends Map<string, unknown> {
     get(key: 'id' | 'body'): string;
     get(key: 'files'): (string | MatchConfig)[];
 }
+
+export interface TemplateVariables {
+    [key: string]: unknown;
+}

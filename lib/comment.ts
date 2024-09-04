@@ -1,5 +1,5 @@
 import * as Mustache from 'mustache';
-import { Comment } from '../types/global.type';
+import {Comment, TemplateVariables} from '../types/global.type';
 
 function commentMetadata(snippetIds: string[]): string {
   return `<!-- pr-commenter-metadata: ${snippetIds.join(',')} -->`;
@@ -19,7 +19,7 @@ function extractCommentMetadata(commentBody: string): string[] | null {
 function assembleCommentBody(
     snippetIds: string[],
     commentConfig: Map<string, unknown>,
-    templateVariables:  Record<string, string> = {}): string {
+    templateVariables:  TemplateVariables = {}): string {
   let strings = [
     commentConfig.get('header') as string | undefined,
     ...(commentConfig.get('snippets') as Map<string, unknown>[]).map((snippet) => {

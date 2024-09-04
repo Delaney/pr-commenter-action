@@ -1,7 +1,7 @@
 import * as Mustache from 'mustache';
-import { CommentObject, ConfigObject, MatchConfig } from '../types/global.type';
+import {CommentObject, ConfigObject, MatchConfig, TemplateVariables} from '../types/global.type';
 
-function validateCommentConfig(configObject: ConfigObject, templateVariables?: Record<string|number, string|number>): Map<string, unknown> {
+function validateCommentConfig(configObject: ConfigObject, templateVariables?: TemplateVariables): Map<string, unknown> {
   const configMap = new Map<string, unknown>();
   const comment: CommentObject = configObject.comment;
 
