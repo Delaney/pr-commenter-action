@@ -1,4 +1,4 @@
-const config = require('../lib/config');
+import * as config from '../lib/config';
 
 describe('validateCommentConfig', () => {
   const snippet1Object = {
@@ -43,19 +43,19 @@ describe('validateCommentConfig', () => {
     }],
   };
 
-  const snippet1Map = new Map([
+  const snippet1Map = new Map<string, unknown>([
     ['id', 'snippet1'],
     ['body', 'let me tell you something...'],
     ['files', ['/foo/bar.txt', '/foo/baz/*']],
   ]);
 
-  const snippet2Map = new Map([
+  const snippet2Map = new Map<string, unknown>([
     ['id', 'snippet2'],
     ['body', 'once upon a time...'],
     ['files', ['/pizzazz/**/*.html']],
   ]);
 
-  const snippet3Map = new Map([
+  const snippet3Map = new Map<string, unknown>([
     ['id', 'snippet3'],
     ['body', 'there was a wolf...'],
     ['files', [{
@@ -63,7 +63,7 @@ describe('validateCommentConfig', () => {
     }]],
   ]);
 
-  const snippet4Map = new Map([
+  const snippet4Map = new Map<string, unknown>([
     ['id', 'snippet4'],
     ['body', 'something something...'],
     ['files', [{
@@ -71,7 +71,7 @@ describe('validateCommentConfig', () => {
     }]],
   ]);
 
-  const snippet5Map = new Map([
+  const snippet5Map = new Map<string, unknown>([
     ['id', 'snippet5'],
     ['body', 'something something...'],
     ['files', [{
@@ -91,7 +91,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'nothing'],
       ['onUpdate', 'nothing'],
       ['header', 'hello'],
@@ -114,7 +114,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'nothing'],
       ['header', 'hello'],
@@ -135,7 +135,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'edit'],
       ['header', 'hi'],
@@ -155,7 +155,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'edit'],
       ['header', undefined],
@@ -163,6 +163,7 @@ describe('validateCommentConfig', () => {
       ['snippets', [snippet2Map]],
     ]);
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(config.validateCommentConfig(input)).toEqual(output);
   });
 
@@ -175,7 +176,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'edit'],
       ['header', 'hello'],
@@ -183,6 +184,7 @@ describe('validateCommentConfig', () => {
       ['snippets', [snippet2Map]],
     ]);
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(config.validateCommentConfig(input)).toEqual(output);
   });
 
@@ -193,6 +195,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'number' under key '\.comment\.header' \(should be a string\)/);
   });
 
@@ -203,6 +206,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'number' under key '\.comment\.footer' \(should be a string\)/);
   });
 
@@ -213,6 +217,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value 'sup' under key '\.comment\.on-create' \(should be one of: create, nothing\)/);
   });
 
@@ -223,6 +228,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'object' under key '\.comment\.on-create' \(should be a string\)/);
   });
 
@@ -238,7 +244,7 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { onCreate: 'nothing' };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'nothing'],
       ['onUpdate', 'recreate'],
       ['header', 'hi'],
@@ -258,6 +264,7 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { onCreate: '1234' };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input, templateVariables)).toThrow(/found unexpected value '1234' under key '\.comment\.on-create' \(should be one of: create, nothing\)/);
   });
 
@@ -268,6 +275,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value 'whatever' under key '\.comment\.on-update' \(should be one of: recreate, edit, nothing\)/);
   });
 
@@ -278,6 +286,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'number' under key '\.comment\.on-update' \(should be a string\)/);
   });
 
@@ -293,7 +302,7 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { onUpdate: 'nothing' };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'nothing'],
       ['header', 'hi'],
@@ -313,6 +322,7 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { onUpdate: 'cat' };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input, templateVariables)).toThrow(/found unexpected value 'cat' under key '\.comment\.on-update' \(should be one of: recreate, edit, nothing\)/);
   });
 
@@ -327,7 +337,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
-    const output = new Map([
+    const output = new Map<string, unknown>([
       ['onCreate', 'create'],
       ['onUpdate', 'recreate'],
       ['header', undefined],
@@ -339,6 +349,7 @@ describe('validateCommentConfig', () => {
       ['snippets', [snippet1Map]],
     ]);
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(config.validateCommentConfig(input)).toEqual(output);
   });
 
@@ -347,6 +358,7 @@ describe('validateCommentConfig', () => {
       comment: {},
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets' \(should be a non-empty array\)/);
   });
 
@@ -357,6 +369,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets' \(should be a non-empty array\)/);
   });
 
@@ -367,6 +380,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets' \(should be a non-empty array\)/);
   });
 
@@ -382,6 +396,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'undefined' under key '\.comment\.snippets\.0\.id' \(should be a string\)/);
   });
 
@@ -398,6 +413,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found invalid snippet id 'can this have spaces\?' \(snippet ids must contain only letters, numbers, dashes, and underscores\)/);
   });
 
@@ -416,13 +432,13 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { date: '2021-08-27' };
 
-    const snippets = [new Map([
+    const snippets = [new Map<string, unknown>([
       ['id', 'snippet-2021-08-27'],
       ['body', 'something something...'],
       ['files', ['foo.txt']],
     ])];
 
-    const expected = new Map([
+    const expected = new Map<string, unknown>([
       ['footer', undefined],
       ['header', undefined],
       ['onCreate', 'create'],
@@ -430,6 +446,7 @@ describe('validateCommentConfig', () => {
       ['snippets', snippets],
     ]);
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(config.validateCommentConfig(input, templateVariables)).toEqual(expected);
   });
 
@@ -448,6 +465,7 @@ describe('validateCommentConfig', () => {
 
     const templateVariables = { date: '2021 08 27' };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input, templateVariables)).toThrow(/found invalid snippet id 'snippet-2021 08 27' \(snippet ids must contain only letters, numbers, dashes, and underscores\)/);
   });
 
@@ -473,6 +491,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'undefined' under key '\.comment\.snippets\.1\.id' \(should be a string\)/);
   });
 
@@ -488,6 +507,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type 'undefined' under key '\.comment\.snippets\.0\.body' \(should be a string\)/);
   });
 
@@ -503,6 +523,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets\.0\.files' \(should be a non-empty array\)/);
   });
 
@@ -519,6 +540,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets\.0\.files' \(should be a non-empty array\)/);
   });
 
@@ -535,6 +557,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets\.0\.files\.1' \(should be a string or an object with keys 'all' and\/or 'any'\)/);
   });
 
@@ -553,6 +576,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets\.0\.files\.0' \(should be a string or an object with keys 'all' and\/or 'any'\)/);
   });
 
@@ -573,6 +597,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found unexpected value type under key '\.comment\.snippets\.0\.files\.2' \(should be a string or an object with keys 'all' and\/or 'any'\)/);
   });
 
@@ -594,6 +619,7 @@ describe('validateCommentConfig', () => {
       },
     };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input)).toThrow(/found duplicate snippet id 'foo'/);
   });
 
@@ -617,6 +643,7 @@ describe('validateCommentConfig', () => {
 
     const variableTemplates = { number: 5, id: 5 };
 
+    // @ts-expect-error: Intentional type violation for testing
     expect(() => config.validateCommentConfig(input, variableTemplates)).toThrow(/found duplicate snippet id 'snippet-5'/);
   });
 });
