@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ncc build lib/index.js --license licenses.txt",
-    "lint": "eslint lib/**/*.js test/**/*.js",
+    "build": "ncc build lib/index.ts --license licenses.txt",
+    "lint": "eslint lib/**/*.ts test/**/*.ts",
     "test": "jest"
   },
   "repository": {
