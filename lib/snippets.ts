@@ -1,12 +1,23 @@
 import * as core from '@actions/core';
 import { Minimatch, MinimatchOptions } from "minimatch";
-import { CommentConfig, MatchConfig } from "../types/global.type";
+import { CommentObject } from "./comment";
+import { MatchConfig } from "./config";
 
-function getMatchingSnippetIds(changedFiles: string[], commentConfig: CommentConfig): string[] {
+type files = (string | MatchConfig)[];
+
+export type Snippet = {
+  id: string;
+  body: string;
+  get(key: 'id' | 'body'): string;
+  files: files;
+  get(key: 'files'): files;
+};
+
+function getMatchingSnippetIds(changedFiles: string[], commentConfig: CommentObject): string[] {
   const snippetIds = commentConfig.get('snippets').reduce<string[]>((acc, snippet): string[] => {
     core.debug(`processing snippet ${snippet.get('id')}`);
 
-    if (checkGlobs(changedFiles, snippet.get('files') as [], commentConfig.get('globOptions') || {})) {
+    if (checkGlobs(changedFiles, snippet.get('files'), commentConfig.get('globOptions') || {})) {
       return [...acc, snippet.get('id') as string];
     }
     return acc;

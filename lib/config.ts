@@ -1,9 +1,32 @@
 import * as Mustache from 'mustache';
-import {CommentObject, ConfigObject, MatchConfig, TemplateVariables} from '../types/global.type';
+import { CommentObject } from './comment';
+import { Snippet } from "./snippets";
 
-function validateCommentConfig(configObject: ConfigObject, templateVariables?: TemplateVariables): Map<string, unknown> {
-  const configMap = new Map<string, unknown>();
-  const comment: CommentObject = configObject.comment;
+export type MatchConfig = {
+  any?: string[];
+  all?: string[];
+};
+
+export type TemplateVariables = {
+  [key: string]: unknown;
+}
+
+export type Config = {
+  comment: CommentConfig;
+};
+
+interface CommentConfig extends CommentObject {
+  header: string | null;
+  footer: string | null;
+  snippets: Snippet[];
+  'on-create'?: string | null;
+  'on-update'?: string | null;
+  'glob-options'?: object;
+}
+
+function validateCommentConfig(configObject: Config, templateVariables?: TemplateVariables): Map<string, unknown> {
+  const configMap: CommentObject = new Map();
+  const comment: CommentConfig = configObject.comment;
 
   if (typeof comment !== 'object') {
     throw Error(
@@ -25,7 +48,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables?: T
   } else if (typeof comment['on-create'] === 'string') {
     const onCreate = Mustache.render(comment['on-create'], templateVariables);
 
-    if (allowedOnCreateValues.includes(onCreate as typeof allowedOnCreateValues[number])) {
+    if (allowedOnCreateValues.includes(onCreate)) {
       configMap.set('onCreate', onCreate);
     } else {
       throw Error(
@@ -38,13 +61,13 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables?: T
     );
   }
 
-  const allowedOnUpdateValues = ['recreate', 'edit', 'nothing'] as const;
+  const allowedOnUpdateValues = ['recreate', 'edit', 'nothing'];
   if (comment['on-update'] === undefined || comment['on-update'] === null) {
     configMap.set('onUpdate', allowedOnUpdateValues[0]);
   } else if (typeof comment['on-update'] === 'string') {
     const onUpdate = Mustache.render(comment['on-update'], templateVariables);
 
-    if (allowedOnUpdateValues.includes(onUpdate as typeof allowedOnUpdateValues[number])) {
+    if (allowedOnUpdateValues.includes(onUpdate)) {
       configMap.set('onUpdate', onUpdate);
     } else {
       throw Error(
@@ -142,7 +165,7 @@ function validateCommentConfig(configObject: ConfigObject, templateVariables?: T
       return snippetMap;
     }));
 
-    const snippetIds = (configMap.get('snippets') as Map<string, unknown>[]).map((s: Map<string, unknown>) => s.get('id') as string);
+    const snippetIds = (configMap.get('snippets')).map((s) => s.get('id'));
     snippetIds.forEach((value: string, index: number, self: string[]) => {
       if (self.indexOf(value) !== index) {
         throw Error(

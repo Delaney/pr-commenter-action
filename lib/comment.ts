@@ -1,5 +1,23 @@
 import * as Mustache from 'mustache';
-import {Comment, TemplateVariables} from '../types/global.type';
+import {MinimatchOptions} from 'minimatch/dist/esm';
+import { Snippet } from './snippets';
+import { TemplateVariables } from "./config";
+
+export type Comment = {
+  id: number;
+  url: string;
+  created_at: string;
+  body?: string;
+  body_text?: string;
+  body_html?: string;
+}
+
+export interface CommentObject extends Map<string, unknown>{
+  get(key: 'header' | 'footer' | 'onCreate' | 'onUpdate'): string;
+  get(key: 'snippets'): Snippet[],
+  get(key: 'on-create' | 'on-update' | 'globOptions'): Map<string, unknown>[];
+  get(key: 'globOptions'): MinimatchOptions | undefined;
+}
 
 function commentMetadata(snippetIds: string[]): string {
   return `<!-- pr-commenter-metadata: ${snippetIds.join(',')} -->`;
@@ -18,13 +36,13 @@ function extractCommentMetadata(commentBody: string): string[] | null {
 
 function assembleCommentBody(
     snippetIds: string[],
-    commentConfig: Map<string, unknown>,
+    commentConfig: CommentObject,
     templateVariables:  TemplateVariables = {}): string {
   let strings = [
-    commentConfig.get('header') as string | undefined,
-    ...(commentConfig.get('snippets') as Map<string, unknown>[]).map((snippet) => {
-      if (snippetIds.includes(snippet.get('id') as string)) {
-        return snippet.get('body') as string;
+    commentConfig.get('header'),
+    ...(commentConfig.get('snippets')).map(snippet => {
+      if (snippetIds.includes(snippet.get('id'))) {
+        return snippet.get('body');
       }
       return null;
     }),
@@ -52,7 +70,7 @@ function newCommentWouldHaveContent(snippetIds: string[]): boolean {
 function shouldPostNewComment(
     previousComment: Comment | null,
     snippetIds: string[],
-    commentConfig: Map<string, unknown>
+    commentConfig: CommentObject
 ): boolean {
   const isNotEmpty = newCommentWouldHaveContent(snippetIds);
   const isCreating = !previousComment && commentConfig.get('onCreate') === 'create';
@@ -66,7 +84,7 @@ function shouldPostNewComment(
 function shouldDeletePreviousComment(
     previousComment: Comment | null,
     snippetIds: string[],
-    commentConfig: Map<string, unknown>
+    commentConfig: CommentObject
 ): boolean {
   return !!previousComment && (
     shouldPostNewComment(previousComment, snippetIds, commentConfig)
@@ -77,7 +95,7 @@ function shouldDeletePreviousComment(
 function shouldEditPreviousComment(
     previousComment: Comment | null,
     snippetIds: string[],
-    commentConfig: Map<string, unknown>
+    commentConfig: CommentObject
 ): boolean {
   return newCommentWouldHaveContent(snippetIds) && (
     !!previousComment

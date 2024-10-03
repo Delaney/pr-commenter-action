@@ -1,9 +1,10 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as yaml from 'js-yaml';
-import {Comment, CommentConfig, ConfigObject, TemplateVariables} from '../types/global.type';
-import { validateCommentConfig } from './config';
+import { Comment, CommentObject } from './comment';
+import { Config,  TemplateVariables, validateCommentConfig } from './config';
 import { getMatchingSnippetIds } from './snippets';
+import { OctokitClient } from './github';
 import {
   assembleCommentBody,
   extractCommentMetadata,
@@ -76,7 +77,7 @@ async function run(): Promise<void> {
   } catch (error: unknown) {
     if (error instanceof Error) {
       core.error(error);
-      core.setFailed((error as Error).message);
+      core.setFailed((error).message);
     }
   }
 }
@@ -90,35 +91,35 @@ function getPrNumber(): number | undefined {
   return pullRequest.number;
 }
 
-function isConfigObject(obj: unknown): obj is ConfigObject {
-  if (typeof obj !== 'object' || obj === null) {
-    return false;
-  }
+// function isConfigObject(obj: unknown): obj is Config {
+//   if (typeof obj !== 'object' || obj === null) {
+//     return false;
+//   }
+//
+//   const config = obj as Record<string, unknown>;
+//
+//   if (typeof config.comment !== 'object' || config.comment === null) {
+//     return false;
+//   }
+//
+//   const comment = config.comment as Record<string, unknown>;
+//
+//   return !(!Array.isArray(comment.snippets) || comment.snippets.length === 0);
+// }
 
-  const config = obj as Record<string, unknown>;
-
-  if (typeof config.comment !== 'object' || config.comment === null) {
-    return false;
-  }
-
-  const comment = config.comment as Record<string, unknown>;
-
-  return !(!Array.isArray(comment.snippets) || comment.snippets.length === 0);
-}
-
-async function getCommentConfig(client: ReturnType<typeof github.getOctokit>, configurationPath: string, templateVariables: TemplateVariables): Promise<CommentConfig> {
+async function getCommentConfig(client: OctokitClient, configurationPath: string, templateVariables: TemplateVariables): Promise<CommentObject> {
   const configurationContent = await getFileContent(client, configurationPath);
-  const configObject = yaml.load(configurationContent);
+  const configObject = yaml.load(configurationContent) as Config;
 
-  if (!isConfigObject(configObject)) {
-    throw new Error('Invalid configuration object structure');
-  }
+  // if (!isConfigObject(configObject)) {
+  //   throw new Error('Invalid configuration object structure');
+  // }
 
   // transform object to a map or throw if yaml is malformed:
-  return validateCommentConfig(configObject, templateVariables) as CommentConfig;
+  return validateCommentConfig(configObject, templateVariables);
 }
 
-async function getPreviousPRComment(client: ReturnType<typeof github.getOctokit>, prNumber: number): Promise<Comment | null> {
+async function getPreviousPRComment(client: OctokitClient, prNumber: number): Promise<Comment | null> {
   const comments = await getComments(client, prNumber);
   core.debug(`there are ${comments.length} comments on the PR #${prNumber}`);
 

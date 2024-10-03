@@ -1,8 +1,8 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { Comment } from '../types/global.type';
+import { Comment } from './comment';
 
-type OctokitClient = ReturnType<typeof github.getOctokit>;
+export type OctokitClient = ReturnType<typeof github.getOctokit>;
 
 type RemoteDefinition = {
   owner: string;
