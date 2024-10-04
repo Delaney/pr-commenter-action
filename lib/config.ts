@@ -15,7 +15,7 @@ export type Config = {
   comment: CommentConfig;
 };
 
-interface CommentConfig extends CommentObject {
+export interface CommentConfig extends CommentObject {
   header: string | null;
   footer: string | null;
   snippets: Snippet[];
@@ -24,7 +24,7 @@ interface CommentConfig extends CommentObject {
   'glob-options'?: object;
 }
 
-function validateCommentConfig(configObject: Config, templateVariables?: TemplateVariables): Map<string, unknown> {
+function validateCommentConfig(configObject: Config, templateVariables?: TemplateVariables): CommentObject {
   const configMap: CommentObject = new Map();
   const comment: CommentConfig = configObject.comment;
 

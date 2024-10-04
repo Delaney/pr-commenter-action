@@ -18,7 +18,7 @@ function getMatchingSnippetIds(changedFiles: string[], commentConfig: CommentObj
     core.debug(`processing snippet ${snippet.get('id')}`);
 
     if (checkGlobs(changedFiles, snippet.get('files'), commentConfig.get('globOptions') || {})) {
-      return [...acc, snippet.get('id') as string];
+      return [...acc, snippet.get('id')];
     }
     return acc;
   }, []);

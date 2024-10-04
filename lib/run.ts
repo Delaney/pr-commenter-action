@@ -91,29 +91,9 @@ function getPrNumber(): number | undefined {
   return pullRequest.number;
 }
 
-// function isConfigObject(obj: unknown): obj is Config {
-//   if (typeof obj !== 'object' || obj === null) {
-//     return false;
-//   }
-//
-//   const config = obj as Record<string, unknown>;
-//
-//   if (typeof config.comment !== 'object' || config.comment === null) {
-//     return false;
-//   }
-//
-//   const comment = config.comment as Record<string, unknown>;
-//
-//   return !(!Array.isArray(comment.snippets) || comment.snippets.length === 0);
-// }
-
 async function getCommentConfig(client: OctokitClient, configurationPath: string, templateVariables: TemplateVariables): Promise<CommentObject> {
   const configurationContent = await getFileContent(client, configurationPath);
   const configObject = yaml.load(configurationContent) as Config;
-
-  // if (!isConfigObject(configObject)) {
-  //   throw new Error('Invalid configuration object structure');
-  // }
 
   // transform object to a map or throw if yaml is malformed:
   return validateCommentConfig(configObject, templateVariables);
