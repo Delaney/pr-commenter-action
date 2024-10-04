@@ -1,5 +1,5 @@
 import * as snippets from '../lib/snippets';
-import {CommentConfig} from "../types/global.type";
+import {CommentConfig} from "../lib/config";
 
 jest.mock('@actions/core');
 

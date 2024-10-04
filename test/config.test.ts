@@ -1,4 +1,5 @@
 import * as config from '../lib/config';
+import {Config} from "../lib/config";
 
 describe('validateCommentConfig', () => {
   const snippet1Object = {
@@ -89,7 +90,7 @@ describe('validateCommentConfig', () => {
         footer: 'bye',
         snippets: [snippet1Object, snippet2Object, snippet3Object, snippet4Object, snippet5Object],
       },
-    };
+    } as Config;
 
     const output = new Map<string, unknown>([
       ['onCreate', 'nothing'],
@@ -103,6 +104,7 @@ describe('validateCommentConfig', () => {
   });
 
   test('removes unknown keys', () => {
+    // @ts-expect-error: Intentional type violation for testing
     const input = {
       comment: {
         'on-update': 'nothing',
@@ -112,7 +114,7 @@ describe('validateCommentConfig', () => {
         id: '342',
         snippets: [snippet1Object, snippet2Object],
       },
-    };
+    } as Config;
 
     const output = new Map<string, unknown>([
       ['onCreate', 'create'],
@@ -133,7 +135,7 @@ describe('validateCommentConfig', () => {
         footer: 'bye',
         snippets: [snippet2Object],
       },
-    };
+    } as Config;
 
     const output = new Map<string, unknown>([
       ['onCreate', 'create'],
@@ -240,7 +242,7 @@ describe('validateCommentConfig', () => {
         footer: 'bye',
         snippets: [snippet2Object],
       },
-    };
+    } as Config;
 
     const templateVariables = { onCreate: 'nothing' };
 
@@ -298,7 +300,7 @@ describe('validateCommentConfig', () => {
         footer: 'bye',
         snippets: [snippet2Object],
       },
-    };
+    } as Config;
 
     const templateVariables = { onUpdate: 'nothing' };
 

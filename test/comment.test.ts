@@ -1,4 +1,5 @@
 import * as comment from '../lib/comment';
+import {CommentObject} from "../lib/comment";
 
 describe('comment', () => {
   describe('assembleCommentBody', () => {
@@ -16,7 +17,7 @@ describe('comment', () => {
             ['body', 'Do not forget to be awesome!'],
           ]),
         ]],
-      ]);
+      ]) as CommentObject;
 
       expect(comment.assembleCommentBody(['snippet1'], commentConfig)).toEqual(
         'hello\n\n'
@@ -48,7 +49,7 @@ describe('comment', () => {
             ['body', 'Do not forget to be awesome!'],
           ]),
         ]],
-      ]);
+      ]) as CommentObject;
 
       expect(comment.assembleCommentBody(['snippet1', 'snippet2'], commentConfig)).toEqual(
         'A list:\n- one\n- two\n- three\n\n'
@@ -72,7 +73,7 @@ describe('comment', () => {
             ['body', 'Do not forget to be awesome!'],
           ]),
         ]],
-      ]);
+      ]) as CommentObject;
 
       expect(comment.assembleCommentBody(['snippet1', 'snippet2'], commentConfig)).toEqual(
         'hello\n\n'
@@ -96,7 +97,7 @@ describe('comment', () => {
             ['body', 'Do not forget to be awesome!'],
           ]),
         ]],
-      ]);
+      ]) as CommentObject;
 
       expect(comment.assembleCommentBody(['snippet1', 'snippet2'], commentConfig)).toEqual(
         'A list:\n- one\n- two\n- three\n\n'
@@ -115,7 +116,7 @@ describe('comment', () => {
             ['body', 'A list:\n- one\n- two\n{{#shouldIncludeThirdItem}}- three\n{{/shouldIncludeThirdItem}}'],
           ]),
         ]],
-      ]);
+      ]) as CommentObject;
 
       const templateVariables = {
         user: {
